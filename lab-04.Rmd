@@ -1,51 +1,146 @@
 ---
-title: "Lab 04 - La Quinta is Spanish for next to Denny's, Pt. 1"
-author: "Insert your name here"
-date: "Insert date here"
+title: "Lab 04"
+author: "Alex Connolly"
+date: "Feb-16-2022"
 output: github_document
 ---
 
 ### Load packages and data
 
-```{r load-packages, message = FALSE}
+```{r load-packages}
 library(tidyverse) 
 library(dsbox) 
 ```
 
-```{r load-data, message = FALSE}
+```{r load-data}
 states <- read_csv("data/states.csv")
 ```
 
 ### Exercise 1
 
-Remove this text, and add your answer for Exercise 1 here.
-Add code chunks as needed.
-Don't forget to label your code chunk.
-Do not use spaces in code chunk labels.
+```{r dennys}
+nrow(dennys)
+ncol(dennys)
 
+```
+
+There are 1643 rows and 6 columns, the variables are addresses, city, states, zips, longitude, latitude.
 ### Exercise 2
 
-Remove this text, and add your answer for Exercise 2 here.
-Add code chunks as needed.
-Don't forget to label your code chunk.
-Do not use spaces in code chunk labels.
+```{r laquinta}
+nrow(laquinta)
+ncol(laquinta)
+
+```
+909 rows, 6 columns, same variables
 
 ### Exercise 3
 
-...
+There are multiple La Quinta locations outside of the US, including Canada, Mexico, China, New Zealand, Honduras, Turkey, United Arab Emirates,Chile, Colombia.
+
+No Dennys in other countries. 
 
 ### Exercise 4
 
-...
+You could filter locations that are from outside the US. 
+
 
 ### Exercise 5
+```{r statesdennys}
+dennys %>%
+  filter(!(state %in% states$abbreviation))
+```
 
-...
+No states are outside the US for Dennys
 
 ### Exercise 6
 
-...
+```{r countrydennys}
+dennys %>%
+  mutate(country = "United States")
+```
 
+### Exercise 7
  
-Add exercise headings as needed.
+```{r statelaquinta}
+laquinta %>%
+  filter(!(state %in% states$abbreviation))
+```
+These countries ar Mexico (10 of them), Colombia, Canada (2), and Hondurus. 
 
+### Exercise 8
+
+```{r countries}
+laquinta <- laquinta %>%
+  mutate(country = case_when(
+    state %in% state.abb     ~ "United States",
+    state %in% c("ON", "BC") ~ "Canada",
+    state == "ANT"           ~ "Colombia",
+    state == "FM"            ~ "Honduras",
+    state %in% c("AG", "QR", "CH", "NL", "VE", "PU", "SL") ~ "Mexico"
+  ))
+```
+```{r filterUS}
+laquinta %>%
+  filter(country == "United States")
+```
+
+### Excercise 9
+
+
+
+```{r joiningD}
+
+dennys %>%
+  count(state) %>%
+  inner_join(states, by = c("state" = "abbreviation")) %>%
+  mutate(Dennys_per_distance = n / area * 1000) %>%
+  arrange(Dennys_per_distance)
+
+```
+DC has the most Dennys per thousand square miles, rhode island second.
+Delaware has the least Dennys, California has the most.
+
+```{r joiningL}
+
+laquinta %>%
+  count(state) %>%
+  inner_join(states, by = c("state" = "abbreviation")) %>%
+  mutate(Laquinta_per_distance = n / area * 1000) %>%
+  arrange(Laquinta_per_distance)
+
+```
+Here, RI has the most per thousand square miles, FLorida second.
+Maine has the least La Quintas, Texas has the most. 
+ 
+### Excersise 10
+
+```{r mutate-bind}
+dennys <- dennys %>%
+  mutate(establishment = "Denny's")
+laquinta <- laquinta %>%
+  mutate(establishment = "Laquinta")
+dennys_laquinta <- bind_rows(dennys, laquinta)
+```
+
+```{r plot}
+ggplot(dennys_laquinta, mapping = aes(x = longitude, y = latitude, color = establishment)) +
+  geom_point()
+```
+### Excersise 11
+```{r North_Carolian}
+dennys_laquinta %>%
+  filter(state == "NC") %>%
+  ggplot(dennys_laquinta, mapping = aes(x = longitude, y = latitude, color = establishment)) + geom_point(alpha=.5) 
+```
+I mean there are definitely a lot of Denny's that are close to Laquintas, but I don't think it is as close as Mitch Hedberg suggests.
+
+### Excercise 12
+
+```{r Texas}
+dennys_laquinta %>%
+  filter(state == "TX") %>%
+  ggplot(dennys_laquinta, mapping = aes(x = longitude, y = latitude, color = establishment)) + geom_point(alpha=.4) 
+```
+
+This state it holds up a lot better. It does appear that everywhere there is a Denny's, there is a Laquinta very close. Way more Laquintas though. 
